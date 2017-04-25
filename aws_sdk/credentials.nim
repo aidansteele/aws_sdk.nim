@@ -2,7 +2,6 @@ import times
 import os
 import strutils
 import uri
-import nre
 import options
 import tables
 
@@ -29,12 +28,12 @@ proc `$`*(scope: AwsCredentialScope): string =
   result = "$1/$2/$3/aws4_request" % [date, scope.region, scope.service]
 
 proc initCredentialScope*(uri: Uri, time: Time): AwsCredentialScope =
-  let regex = re"(?<service>[^.]+)\.(?<region>[^.]+)?\.?amazonaws.com"
-  let m = match(uri.hostname, regex)
-  let table = toTable(get(m).captures)
-  
-  let service = table["service"]
-  var region = table["region"]
-  if isNil(region): region = "us-east-1"
-  
+  let components = split(uri.hostname, '.')
+  let service = components[0]
+  var region = ""
+  if components.len == 4:
+    region = components[1]
+  elif components.len == 3:
+    region = "us-east-1"
+
   result = AwsCredentialScope(time: time, region: region, service: service)

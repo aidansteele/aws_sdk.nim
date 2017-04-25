@@ -4,7 +4,7 @@ import uri
 import times
 import sequtils
 import algorithm
-from nre import nil
+import pegs
 import aws_sdk/strhelpers
 import sph
 import queryparams
@@ -20,17 +20,18 @@ const AwsDateFormatv4 = "yyyyMMdd"
 const AwsDefaultAlgorithmv4 = "AWS4-HMAC-SHA256"
 
 proc formattedHeaderNamesStr[T](headers: T): string =
-  let lowerSignedHeaders = mapIt(toSeq(keys(headers)), toLower(it))
+  let lowerSignedHeaders = mapIt(toSeq(keys(headers)), toLowerAscii(it))
   result = join(sortedByIt(lowerSignedHeaders, it), ";")
 
 proc canonicalQueryv4(request: AwsRequest): string =
   let signedHeadersStr = formattedHeaderNamesStr(request.headers)
-  let payloadHashHex = toLower(hexify(request.payloadHash))
+  let payloadHashHex = toLowerAscii(hexify(request.payloadHash))
   let unsortedPairs = asKeyVal(toSeq(pairs(request.headers)))
 
+  let p = peg"\s+"
   let canonicalHeaders = map(unsortedPairs) do (it: auto) -> string:
-    let k = toLower(it.key)
-    let v = nre.replace(it.value, nre.re"\s+", " ")
+    let k = toLowerAscii(it.key)
+    let v = replace(it.value, p, " ")
     "$1:$2" % [k, v]
   let sortedHeaderPairs = sortedByIt(canonicalHeaders, it)
 
