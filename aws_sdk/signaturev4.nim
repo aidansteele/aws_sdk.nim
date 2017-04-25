@@ -4,7 +4,7 @@ import uri
 import times
 import sequtils
 import algorithm
-import nre
+from nre import nil
 import aws_sdk/strhelpers
 import sph
 import queryparams
@@ -27,12 +27,14 @@ proc canonicalQueryv4(request: AwsRequest): string =
   let signedHeadersStr = formattedHeaderNamesStr(request.headers)
   let payloadHashHex = toLower(hexify(request.payloadHash))
   let unsortedPairs = asKeyVal(toSeq(pairs(request.headers)))
-  let sortedHeaderPairs = sortedByIt(unsortedPairs, it.key)
-  let canonicalHeaders = map(sortedHeaderPairs) do (it: auto) -> string:
+
+  let canonicalHeaders = map(unsortedPairs) do (it: auto) -> string:
     let k = toLower(it.key)
-    let v = replace(it.value, re"\s+", " ")
+    let v = nre.replace(it.value, nre.re"\s+", " ")
     "$1:$2" % [k, v]
-  let canonicalHeadersStr = join(canonicalHeaders, "\l")
+  let sortedHeaderPairs = sortedByIt(canonicalHeaders, it)
+
+  let canonicalHeadersStr = join(sortedHeaderPairs, "\l")
 
   let lines = [
     toUpper(request.httpMethod),
