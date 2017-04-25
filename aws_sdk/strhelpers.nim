@@ -1,12 +1,10 @@
-import nre
-import sequtils
 import strutils
 
 proc deindent*(inp: string): string =
-  let indents = findAll(inp, re"(?m)^[ \t]+")
-  let maxSize = max(mapIt(indents, len(it)))
-  let regex = re("(?m)^[ \\t]{$1}" % intToStr(maxSize))
-  result = replace(inp, regex, "")
+  result = ""
+  for ln in inp.lines:
+    result &= strip(ln, trailing = false)
+    result &= "\l"
   
 proc dehexify*(inp: string): string =
   result = newStringOfCap(toInt(len(inp) / 2))
