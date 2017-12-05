@@ -13,7 +13,7 @@ proc queryParams*(uri: Uri): StringTableRef =
     let val = pair[1]
     tab[key] = val
   result = tab
-  
+
 proc setQueryParams*(uri: var Uri, params: StringTableRef) =
   let unsorted = toSeq(pairs(params))
   let tuples = sortedByIt(unsorted, it.key)

@@ -1,17 +1,8 @@
-import strutils
-import strtabs
-import uri
-import times
-import sequtils
-import algorithm
-import pegs
-import aws_sdk/strhelpers
+import strutils, strtabs, uri, times, sequtils, algorithm, pegs, tables
+
+import ../credentials
+import strhelpers, request, queryparams, tablemerge
 import sph
-import queryparams
-import tablemerge
-import aws_sdk/request
-import aws_sdk/credentials
-import tables
 
 proc asKeyVal*[T](x: T): auto = cast[seq[tuple[key: string, value: string]]](x)
 
@@ -38,7 +29,7 @@ proc canonicalQueryv4(request: AwsRequest): string =
   let canonicalHeadersStr = join(sortedHeaderPairs, "\l")
 
   let lines = [
-    toUpper(request.httpMethod),
+    toUpperAscii(request.httpMethod),
     request.uri.path,
     request.uri.query, # already sorted by now
     canonicalHeadersStr,
