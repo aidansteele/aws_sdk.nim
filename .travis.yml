@@ -1,0 +1,14 @@
+os:
+  - linux
+
+cache:
+  directories:
+    - vendor/Nim
+
+language: c
+
+before_script:
+  - ci/makenim.sh
+
+script:
+  - ci/e2e.sh
