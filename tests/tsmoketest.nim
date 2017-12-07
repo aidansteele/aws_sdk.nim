@@ -27,13 +27,57 @@ template smoke(clientName: untyped, procName: untyped, key: string, arg: JsonNod
 
         allFutures.add(runTest())
 
-
-smoke DynamoDB, listTables, "TableNames"
-smoke Firehose, listDeliveryStreams, "DeliveryStreamNames"
-smoke Logs, describeLogGroups, "logGroups"
-# smoke Translate, translateText, "logGroups", %*{"SourceLanguageCode": "en", "TargetLanguageCode": "ua", "Text": "hello, world!"}
-smoke DeviceFarm, listProjects, "projects", nil, "us-west-2"
+smoke ACM, listCertificates, "CertificateSummaryList"
 smoke AppStream, describeFleets, "Fleets"
+smoke Athena, listNamedQueries, "NamedQueryIds"
+# smoke Cloud9, listEnvironments, "blabla"
+smoke CloudHSM, describeClusters, "Clusters"
+smoke CloudTrail, describeTrails, "trailList"
+smoke CodeBuild, listProjects, "projects"
+smoke CodeCommit, listRepositories, "repositories"
+smoke CodeDeploy, listApplications, "applications"
+smoke CodePipeline, listPipelines, "pipelines"
+smoke CodeStar, listProjects, "projects"
+smoke CognitoIdentity, listIdentityPools, "IdentityPools", %*{"MaxResults": 33}
+smoke CognitoIDP, listUserPools, "UserPools", %*{"MaxResults": 33}
+# smoke Comprehend, listTopicsDetectionJobs, "blabla"
+smoke DataPipeline, listPipelines, "pipelineIdList"
+# smoke DAX, listTags, "blabla"
+smoke DeviceFarm, listProjects, "projects", nil, "us-west-2"
+smoke DirectConnect, describeVirtualGateways, "virtualGateways"
+# smoke Discovery, describeTags, "Tags", nil, "us-west-2"
+smoke DMS, describeEndpoints, "Endpoints"
+smoke DS, describeDirectories, "DirectoryDescriptions"
+smoke DynamoDB, listTables, "TableNames"
+smoke ECR, describeRepositories, "repositories"
+smoke ECS, listClusters, "clusterArns"
+smoke Events, listRules, "Rules"
+smoke Firehose, listDeliveryStreams, "DeliveryStreamNames"
+smoke GameLift, describeFleetAttributes, "FleetAttributes"
+# smoke Glue, getJobs, "blabla"
+# smoke Health, describeEvents, "blabla"
+smoke Inspector, listAssessmentTemplates, "assessmentTemplateArns"
+smoke Kinesis, listStreams, "StreamNames"
+smoke KinesisAnalytics, listApplications, "ApplicationSummaries"
+smoke KMS, listKeys, "Keys"
+smoke LightSail, getBlueprints, "blueprints"
+smoke Logs, describeLogGroups, "logGroups"
+smoke MachineLearning, describeDataSources, "Results"
+# smoke MediaStore, listContainers, "blabla"
+smoke OpsWorks, describeStacks, "Stacks"
+# smoke Organizations, listRoots, "blabla"
+smoke Rekognition, listCollections, "CollectionIds"
+smoke Route53Domains, listDomains, "Domains"
+# smoke SageMaker, listModels, "blabla"
+smoke ServiceCatalog, listPortfolios, "PortfolioDetails"
+# smoke Shield, listProtections, "blabla"
+# smoke SMS, getServers, "blabla"
+smoke SSM, listDocuments, "DocumentIdentifiers"
+smoke StorageGateway, describeTapeArchives, "TapeArchives"
+# smoke SWF, listWorkflowTypes, "blabla"
+# smoke Translate, translateText, "logGroups", %*{"SourceLanguageCode": "en", "TargetLanguageCode": "ua", "Text": "hello, world!"}
+# smoke WAF, listIPSets, "blabla"
+smoke WorkSpaces, describeWorkspaces, "Workspaces"
 
 waitFor all(allFutures)
 assert(numFailures == 0)

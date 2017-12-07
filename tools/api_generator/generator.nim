@@ -145,7 +145,30 @@ when isMainModule:
         "datapipeline": "DataPipeline",
         "codedeploy": "CodeDeploy",
         "cloudtrail": "CloudTrail",
-        "logs": "Logs"
+        "logs": "Logs",
+        "ecs": "ECS",
+        "ecr": "ECR",
+        "waf": "WAF",
+        "dax": "DAX",
+        "comprehend": "Comprehend",
+        "rekognition": "Rekognition",
+        "swf": "SWF",
+        "lightsail": "Lightsail",
+        "ssm": "SSM",
+        "kinesisanalytics": "KinesisAnalytics",
+        "dms": "DMS",
+        "events": "Events",
+        "acm": "ACM",
+        "cognito-identity": "CognitoIdentity",
+        "discovery": "Discovery",
+        "route53domains": "Route53Domains",
+        "kms": "KMS",
+        "sms": "SMS",
+        "mediastore": "MediaStore",
+        "inspector": "Inspector",
+        "ds": "DS",
+        "servicecatalog": "ServiceCatalog",
+        "cognito-idp": "CognitoIDP"
     }
 
     for a in apisToGenerate:
