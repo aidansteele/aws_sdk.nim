@@ -1,4 +1,4 @@
-import json, sets, strutils, os
+import json, sets, strutils, os, algorithm, tables
 
 type Ctx = ref object
     typesDone: HashSet[string]
@@ -6,6 +6,7 @@ type Ctx = ref object
     codeSection: string
     clientClassName: string
     jDesc: JsonNode
+    sendProcName: string
 
 proc newCtx(jDesc: JsonNode): Ctx =
     result.new()
@@ -13,6 +14,13 @@ proc newCtx(jDesc: JsonNode): Ctx =
     result.codeSection = ""
     result.jDesc = jDesc
     result.typesDone = initSet[string]()
+
+    let proto = jDesc["metadata"]["protocol"].str
+    case proto
+    of "json": result.sendProcName = "sendJsonRequest"
+    of "ec2": result.sendProcName = "sendEC2Request"
+    else:
+        raise newException(Exception, "Unknown protocol " & proto)
 
 when false:
     proc genType(c: Ctx, name: string, desc: JsonNode) =
@@ -45,7 +53,7 @@ proc decapitalize(s: string): string =
 proc genProc(c: Ctx, name: string, desc: JsonNode) =
     let htMeth = desc["http"]["method"].str
     let uri = desc["http"]["requestUri"].str
-    let p = "proc " & decapitalize(name) & "*(cl: " & c.clientClassName & ", r: JsonNode): Future[JsonNode] = sendJsonRequest(cl, \"" & name & "\", \"" & htMeth & "\", \"" & uri & "\", r)\L"
+    let p = "proc " & decapitalize(name) & "*(cl: " & c.clientClassName & ", r: JsonNode): Future[JsonNode] = " & c.sendProcName & "(cl, \"" & name & "\", \"" & htMeth & "\", \"" & uri & "\", r)\L"
     c.codeSection &= p
 
 proc genProcs(c: Ctx) =
@@ -72,16 +80,85 @@ proc writeToFile(c: Ctx, filename: string) =
     writeFile(filename, o)
 
 when isMainModule:
-    if paramCount() != 3:
-        raise newException(Exception, "InvalidArguments")
+    if paramCount() != 1:
+        echo "Usage: ", getAppFilename().extractFilename, " <PATH_TO_AWS_GO_SDK>"
+        quit 1
 
-    let apiJsonFile = paramStr(1)
-    let clientClassName = paramStr(2)
-    let outputNimFile = paramStr(3)
+    proc genFile(apiJsonFile, clientClassName, outputNimFile: string) =
+        let c = newCtx(parseFile(apiJsonFile))
+        c.clientClassName = clientClassName
+        # c.genTypes()
+        c.genProcs()
+        c.writeToFile(outputNimFile)
 
-    let c = newCtx(parseFile(apiJsonFile))
-    c.clientClassName = clientClassName
-    # c.genTypes()
-    c.genProcs()
-    c.writeToFile(outputNimFile)
+    let goSDKRoot = paramStr(1)
 
+    let apis = goSDKRoot / "models/apis"
+
+    iterator allAWSApis(): string =
+        for p in walkDir(apis, relative = true):
+            yield p.path
+
+    proc jsonFileForApi(apiName: string): string =
+        var fs = newSeq[string]()
+        let awsPath = apis / apiName
+        for ff in walkDir(awsPath, relative = true):
+            fs.add(ff.path)
+        fs.sort(`cmp`)
+        let latestApiDir = awsPath / fs[^1]
+        result = latestApiDir / "api-2.json"
+
+    proc genApi(awsName, clientClassName: string) =
+        let jsonFile = jsonFileForApi(awsName)
+        let nimFile = clientClassName.toLowerAscii() & ".nim"
+        let outputNimFile = getAppDir() / "../../aws_sdk" / nimFile
+        echo "Generating ", nimFile
+        genFile(jsonFile, clientClassName, outputNimFile)
+
+    let apisToGenerate = {
+        "dynamodb": "DynamoDB",
+        "firehose": "Firehose",
+        "codebuild": "CodeBuild",
+        "kinesis": "Kinesis",
+        "organizations": "Organizations",
+        "athena": "Athena",
+        "shield": "Shield",
+        "cloudhsm": "CloudHSM",
+        "translate": "Translate",
+        "health": "Health",
+        "appstream": "AppStream",
+        "codecommit": "CodeCommit",
+        "gamelift": "GameLift",
+        "budgets": "Budgets",
+        "directconnect": "DirectConnect",
+        "codestar": "CodeStar",
+        "workspaces": "WorkSpaces",
+        "machinelearning": "MachineLearning",
+        "storagegateway": "StorageGateway",
+        "codepipeline": "CodePipeline",
+        "Cloud9": "Cloud9",
+        "opsworks": "OpsWorks",
+        "SageMaker": "SageMaker",
+        "devicefarm": "DeviceFarm",
+        "cloudhsmv2": "CloudHSM",
+        "glue": "Glue",
+        "datapipeline": "DataPipeline",
+        "codedeploy": "CodeDeploy",
+        "cloudtrail": "CloudTrail",
+        "logs": "Logs"
+    }
+
+    for a in apisToGenerate:
+        genApi a[0], a[1]
+
+    when false:
+        let apisToGenerateTable = apisToGenerate.toTable()
+        for a in allAWSApis():
+            if a notin apisToGenerateTable:
+                try:
+                    let j = parseFile(jsonFileForApi(a))
+                    if j["metadata"]["protocol"].str == "json" and j["metadata"]["signatureVersion"].str == "v4":
+                        echo a, "|", j["metadata"]["serviceFullName"].str
+                except:
+                    echo "Error processing ", jsonFileForApi(a)
+                    echo getCurrentException().msg
