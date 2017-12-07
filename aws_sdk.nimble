@@ -12,5 +12,5 @@ requires "sph"
 requires "nim >= 0.13.1"
 
 task tests, "Run tests":
-    for t in ["dynamodb", "logs", "firehose"]:
+    for t in ["smoketest"]:
         exec("nim c -r -d:ssl tests/t" & t)
